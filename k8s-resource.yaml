@@ -52,7 +52,7 @@ metadata:
     haproxy.router.openshift.io/rewrite-target: /documentation
 spec:
   rules:
-    - host: fastapi.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com
+    - host: fastapi.{your-ingreee-host}
       http:
         paths:
           - path: /proxy/documentation
