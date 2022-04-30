@@ -1,0 +1,64 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: demo-fastapi-app-pod
+  labels:
+    app: demo-fastapi-app
+    purpose: test
+    app.kubernetes.io/managed-by: arko
+  annotations:
+    app.severity: "0"	
+spec:
+  restartPolicy: Always
+  priority: 0
+  terminationGracePeriodSeconds: 30
+  containers:
+    - name: demo-fastapi-container
+      image: 'quay.io/arbhatta/fastapi-demo:dev'
+      resources:
+        limits:
+          cpu: 100m
+          memory: 256Mi
+        requests:
+          cpu: 50m
+          memory: 128Mi
+      imagePullPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: demo-fastapi-app-service
+  app.kubernetes.io/managed-by: arko
+  labels:
+    app.kubernetes.io/instance: demo-fastapi-app-service
+    app.kubernetes.io/name: demo-fastapi-app-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: demo-fastapi-app
+  type: ClusterIP
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: fastapi-demo-ingress
+  labels:
+    app.kubernetes.io/managed-by: arko
+    shard: internal
+  annotations:
+    haproxy.router.openshift.io/rewrite-target: /documentation
+spec:
+  rules:
+    - host: fastapi.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com
+      http:
+        paths:
+          - path: /proxy/documentation
+            pathType: Prefix
+            backend:
+              service:
+                name: demo-fastapi-app-service
+                port:
+                  number: 8000
